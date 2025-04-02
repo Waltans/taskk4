@@ -28,6 +28,7 @@ public class User {
 	public User() {
 	}
 	
+	// Getters and Setters
 	public Long getId() {
 		return id;
 	}
