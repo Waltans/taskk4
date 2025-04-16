@@ -14,4 +14,6 @@ public interface UserRepository extends JpaRepository<User, Long>, CustomUserRep
 	
 	@Query("SELECT u FROM User u WHERE u.address.street = :street")
 	List<User> findByAddressStreet(@Param("street") String street);
+	
+	User findByName(String username);
 }
