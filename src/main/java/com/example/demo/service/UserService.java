@@ -2,11 +2,13 @@ package com.example.demo.service;
 
 import com.example.demo.entity.Address;
 import com.example.demo.entity.User;
+import com.example.demo.exception.ResourceNotFoundException;
 import com.example.demo.repository.AddressRepository;
 import com.example.demo.repository.UserRepository;
-import jakarta.transaction.Transactional;
-import java.util.Optional;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
 
 @Service
 public class UserService {
@@ -19,10 +21,6 @@ public class UserService {
 		this.addressRepository = addressRepository;
 	}
 	
-	public Optional<User> findById(Long id) {
-		return userRepository.findById(id);
-	}
-	
 	@Transactional
 	public User createUserWithAddress(User user, Address address) {
 		Address savedAddress = addressRepository.save(address);
@@ -30,22 +28,20 @@ public class UserService {
 		return userRepository.save(user);
 	}
 	
-	@Transactional
-	public User updateUserWithAddress(Long userId, User userDetails, Address addressDetails) {
-		User user = userRepository.findById(userId)
-			.orElseThrow(() -> new RuntimeException("User not found"));
-		
-		Address address = user.getAddress();
-		if (address == null) {
-			address = new Address();
-		}
-		
-		address.setStreet(addressDetails.getStreet());
-		Address savedAddress = addressRepository.save(address);
-		
-		user.setName(userDetails.getName());
-		user.setAddress(savedAddress);
-		
-		return userRepository.save(user);
+	public List<User> findByNameAndStreet(String name, String street) {
+		return userRepository.findByNameAndAddressStreet(name, street);
+	}
+	
+	public List<User> findByStreet(String street) {
+		return userRepository.findByAddressStreet(street);
+	}
+	
+	public User findById(Long id) {
+		return userRepository.findById(id)
+			.orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + id));
+	}
+	
+	public List<User> findAll() {
+		return (List<User>) userRepository.findAll();
 	}
 }
