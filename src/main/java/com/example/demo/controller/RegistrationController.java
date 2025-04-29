@@ -17,6 +17,7 @@ public class RegistrationController {
 	
 	private final UserService userService;
 	private final PasswordEncoder passwordEncoder;
+	private static final String USER_ROLE = "ROLE_USER";
 	
 	public RegistrationController(UserService userService, PasswordEncoder passwordEncoder) {
 		this.userService = userService;
@@ -32,7 +33,7 @@ public class RegistrationController {
 	@PostMapping
 	public String registerUser(User user, @RequestParam String street, Model model) {
 		user.setPassword(passwordEncoder.encode(user.getPassword()));
-		user.setRole("ROLE_USER");
+		user.setRole(USER_ROLE);
 		
 		Address address = new Address();
 		address.setStreet(street);
