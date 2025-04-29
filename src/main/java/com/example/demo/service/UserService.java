@@ -29,7 +29,7 @@ public class UserService {
 	}
 	
 	public List<User> findByNameAndStreet(String name, String street) {
-		return userRepository.findByNameAndAddressStreet(name, street);
+		return userRepository.findByNameAndAddress_Street(name, street);
 	}
 	
 	public List<User> findByStreet(String street) {

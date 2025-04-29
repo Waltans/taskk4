@@ -10,7 +10,7 @@ import org.springframework.data.rest.core.annotation.RepositoryRestResource;
 @RepositoryRestResource(path = "users")
 public interface UserRepository extends JpaRepository<User, Long>, CustomUserRepository {
 	
-	List<User> findByNameAndAddressStreet(String name, String street);
+	List<User> findByNameAndAddress_Street(String name, String street);
 	
 	@Query("SELECT u FROM User u WHERE u.address.street = :street")
 	List<User> findByAddressStreet(@Param("street") String street);

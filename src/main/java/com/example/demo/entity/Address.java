@@ -23,6 +23,10 @@ public class Address {
 	public Address() {
 	}
 	
+	public Address(String street) {
+		this.street = street;
+	}
+	
 	public Long getId() {
 		return id;
 	}

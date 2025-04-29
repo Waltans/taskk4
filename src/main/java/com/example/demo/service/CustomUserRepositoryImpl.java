@@ -17,7 +17,7 @@ public class CustomUserRepositoryImpl implements CustomUserRepository {
 	private EntityManager entityManager;
 	
 	@Override
-	public List<User> findUsersByNameAndStreet(String name, String street) {
+	public List<User> findByNameAndAddress_Street(String name, String street) {
 		CriteriaBuilder cb = entityManager.getCriteriaBuilder();
 		CriteriaQuery<User> query = cb.createQuery(User.class);
 		Root<User> user = query.from(User.class);
@@ -33,7 +33,7 @@ public class CustomUserRepositoryImpl implements CustomUserRepository {
 	}
 	
 	@Override
-	public List<User> findUsersByAddressStreet(String street) {
+	public List<User> findByAddressStreet(String street) {
 		CriteriaBuilder cb = entityManager.getCriteriaBuilder();
 		CriteriaQuery<User> query = cb.createQuery(User.class);
 		Root<User> user = query.from(User.class);
