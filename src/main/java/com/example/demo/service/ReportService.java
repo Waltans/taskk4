@@ -1,5 +1,6 @@
 package com.example.demo.service;
 
+import com.example.demo.TaskResult;
 import com.example.demo.entity.Report;
 import com.example.demo.entity.User;
 import com.example.demo.repository.ReportRepository;
@@ -37,52 +38,57 @@ public class ReportService {
 			.orElseThrow(() -> new RuntimeException("Report not found"));
 	}
 	
-	@Async
 	public CompletableFuture<Void> generateReportAsync(Long reportId) {
 		return CompletableFuture.runAsync(() -> {
+			Report report = reportRepository.findById(reportId)
+				.orElseThrow(() -> new RuntimeException("Report not found"));
+			
 			try {
-				Report report = reportRepository.findById(reportId)
-					.orElseThrow(() -> new RuntimeException("Report not found"));
-				
 				LocalDateTime reportStartTime = LocalDateTime.now();
 				
-				CompletableFuture<Long> userCountFuture = CompletableFuture.supplyAsync(() -> {
+				CompletableFuture<TaskResult<Long>> userCountFuture = CompletableFuture.supplyAsync(() -> {
 					long startTime = System.currentTimeMillis();
 					long count = userRepository.count();
 					long elapsed = System.currentTimeMillis() - startTime;
-					return elapsed;
+					return new TaskResult<>(count, elapsed);
 				}, executor);
 				
-				CompletableFuture<Long> addressListFuture = CompletableFuture.supplyAsync(() -> {
+				CompletableFuture<TaskResult<List<User>>> usersFuture = CompletableFuture.supplyAsync(() -> {
 					long startTime = System.currentTimeMillis();
 					List<User> users = userRepository.findAll();
 					long elapsed = System.currentTimeMillis() - startTime;
-					return elapsed;
+					return new TaskResult<>(users, elapsed);
 				}, executor);
 				
-				long userCountTime = userCountFuture.join();
-				long addressListTime = addressListFuture.join();
-				
-				Duration totalTime = Duration.between(reportStartTime, LocalDateTime.now());
-				
-				String htmlReport = generateHtmlReport(
-					userRepository.count(),
-					userCountTime,
-					userRepository.findAll(),
-					addressListTime,
-					totalTime.toMillis()
-				);
-				
-				reportSetContent(report, htmlReport);
-				reportRepository.save(report);
-				
+				CompletableFuture.allOf(userCountFuture, usersFuture)
+					.exceptionally(ex -> {
+						report.setStatus(Report.ReportStatus.ERROR);
+						report.setContent("Error generating report: " + ex.getMessage());
+						return null;
+					})
+					.thenRun(() -> {
+						if (report.getStatus() != Report.ReportStatus.ERROR) {
+							TaskResult<Long> userCountResult = userCountFuture.join();
+							TaskResult<List<User>> usersResult = usersFuture.join();
+							
+							String htmlReport = generateHtmlReport(
+								userCountResult.result(),
+								userCountResult.executionTime(),
+								usersResult.result(),
+								usersResult.executionTime(),
+								Duration.between(reportStartTime, LocalDateTime.now()).toMillis()
+							);
+							
+							reportSetContent(report, htmlReport);
+						}
+					})
+					.join();
 			} catch (Exception e) {
-				Report report = reportRepository.findById(reportId)
-					.orElseThrow(() -> new RuntimeException("Report not found"));
 				report.setStatus(Report.ReportStatus.ERROR);
 				report.setContent("Error generating report: " + e.getMessage());
-				reportRepository.save(report);
 			}
+			
+			reportRepository.save(report);
 		});
 	}
 	

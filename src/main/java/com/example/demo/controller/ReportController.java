@@ -26,15 +26,11 @@ public class ReportController {
 	public ResponseEntity<String> getReport(@PathVariable Long id) {
 		Report report = reportService.getReport(id);
 		
-		switch (report.getStatus()) {
-		case CREATED:
-			return ResponseEntity.accepted().body("Report is still being generated");
-		case ERROR:
-			return ResponseEntity.ok("Report generation failed: " + report.getContent());
-		case COMPLETED:
-			return ResponseEntity.ok(report.getContent());
-		default:
-			return ResponseEntity.internalServerError().body("Unknown report status");
-		}
+		return switch (report.getStatus()) {
+			case CREATED -> ResponseEntity.accepted()
+				.body("Report is still being generated");
+			case ERROR -> ResponseEntity.ok("Report generation failed: " + report.getContent());
+			case COMPLETED -> ResponseEntity.ok(report.getContent());
+		};
 	}
 }
